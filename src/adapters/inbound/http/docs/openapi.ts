@@ -56,7 +56,7 @@ export const openApiDocument = {
         type: "object",
         properties: {
           userId: { type: "string", example: "user-id" },
-          cardNumber: { type: "string", pattern: "^\\d{16}$", example: "1234123412341234" },
+          cardNumber: { type: "string", pattern: String.raw`^\d{16}$`, example: "1234123412341234" },
           limitCents: { type: "integer", minimum: 100, example: 500000 }
         },
         required: ["userId", "cardNumber", "limitCents"]
