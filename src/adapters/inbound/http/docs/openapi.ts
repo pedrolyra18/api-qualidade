@@ -1,3 +1,22 @@
+const jsonBody = (ref: string) => ({
+  required: true as const,
+  content: { "application/json": { schema: { $ref: ref } } }
+});
+
+const jsonResponse = (description: string, ref: string) => ({
+  description,
+  content: { "application/json": { schema: { $ref: ref } } }
+});
+
+const pathParam = (name: string) => ({
+  name,
+  in: "path" as const,
+  required: true as const,
+  schema: { type: "string" as const }
+});
+
+const REF = (name: string) => `#/components/schemas/${name}`;
+
 export const openApiDocument = {
   openapi: "3.0.3",
   info: {
@@ -5,12 +24,7 @@ export const openApiDocument = {
     version: "1.0.0",
     description: "API para processamento de transacoes financeiras com arquitetura hexagonal"
   },
-  servers: [
-    {
-      url: "/api",
-      description: "Base path local"
-    }
-  ],
+  servers: [{ url: "/api", description: "Base path local" }],
   tags: [
     { name: "Users" },
     { name: "Cards" },
@@ -101,16 +115,7 @@ export const openApiDocument = {
           cancelledAt: { type: "string", format: "date-time", nullable: true },
           chargebackAt: { type: "string", format: "date-time", nullable: true }
         },
-        required: [
-          "id",
-          "cardId",
-          "userId",
-          "amountCents",
-          "description",
-          "status",
-          "referenceMonth",
-          "createdAt"
-        ]
+        required: ["id", "cardId", "userId", "amountCents", "description", "status", "referenceMonth", "createdAt"]
       },
       InvoiceResponse: {
         type: "object",
@@ -132,33 +137,10 @@ export const openApiDocument = {
       post: {
         tags: ["Users"],
         summary: "Criar usuario",
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: {
-                $ref: "#/components/schemas/CreateUserRequest"
-              }
-            }
-          }
-        },
+        requestBody: jsonBody(REF("CreateUserRequest")),
         responses: {
-          "201": {
-            description: "Usuario criado",
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/UserResponse" }
-              }
-            }
-          },
-          "400": {
-            description: "Erro de validacao",
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/ErrorResponse" }
-              }
-            }
-          }
+          "201": jsonResponse("Usuario criado", REF("UserResponse")),
+          "400": jsonResponse("Erro de validacao", REF("ErrorResponse"))
         }
       }
     },
@@ -166,33 +148,10 @@ export const openApiDocument = {
       post: {
         tags: ["Cards"],
         summary: "Criar cartao",
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: {
-                $ref: "#/components/schemas/CreateCardRequest"
-              }
-            }
-          }
-        },
+        requestBody: jsonBody(REF("CreateCardRequest")),
         responses: {
-          "201": {
-            description: "Cartao criado",
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/CardResponse" }
-              }
-            }
-          },
-          "404": {
-            description: "Usuario nao encontrado",
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/ErrorResponse" }
-              }
-            }
-          }
+          "201": jsonResponse("Cartao criado", REF("CardResponse")),
+          "404": jsonResponse("Usuario nao encontrado", REF("ErrorResponse"))
         }
       }
     },
@@ -200,25 +159,9 @@ export const openApiDocument = {
       post: {
         tags: ["Transactions"],
         summary: "Processar transacao",
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: {
-                $ref: "#/components/schemas/ProcessTransactionRequest"
-              }
-            }
-          }
-        },
+        requestBody: jsonBody(REF("ProcessTransactionRequest")),
         responses: {
-          "201": {
-            description: "Transacao processada",
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/TransactionResponse" }
-              }
-            }
-          }
+          "201": jsonResponse("Transacao processada", REF("TransactionResponse"))
         }
       }
     },
@@ -226,23 +169,9 @@ export const openApiDocument = {
       post: {
         tags: ["Transactions"],
         summary: "Cancelar transacao",
-        parameters: [
-          {
-            name: "transactionId",
-            in: "path",
-            required: true,
-            schema: { type: "string" }
-          }
-        ],
+        parameters: [pathParam("transactionId")],
         responses: {
-          "200": {
-            description: "Transacao cancelada",
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/TransactionResponse" }
-              }
-            }
-          }
+          "200": jsonResponse("Transacao cancelada", REF("TransactionResponse"))
         }
       }
     },
@@ -250,23 +179,9 @@ export const openApiDocument = {
       post: {
         tags: ["Transactions"],
         summary: "Simular chargeback",
-        parameters: [
-          {
-            name: "transactionId",
-            in: "path",
-            required: true,
-            schema: { type: "string" }
-          }
-        ],
+        parameters: [pathParam("transactionId")],
         responses: {
-          "200": {
-            description: "Chargeback aplicado",
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/TransactionResponse" }
-              }
-            }
-          }
+          "200": jsonResponse("Chargeback aplicado", REF("TransactionResponse"))
         }
       }
     },
@@ -275,28 +190,16 @@ export const openApiDocument = {
         tags: ["Invoices"],
         summary: "Gerar ou consultar fatura mensal",
         parameters: [
-          {
-            name: "cardId",
-            in: "path",
-            required: true,
-            schema: { type: "string" }
-          },
+          pathParam("cardId"),
           {
             name: "referenceMonth",
-            in: "query",
-            required: true,
-            schema: { type: "string", example: "2026-03" }
+            in: "query" as const,
+            required: true as const,
+            schema: { type: "string" as const, example: "2026-03" }
           }
         ],
         responses: {
-          "200": {
-            description: "Fatura do mes",
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/InvoiceResponse" }
-              }
-            }
-          }
+          "200": jsonResponse("Fatura do mes", REF("InvoiceResponse"))
         }
       }
     }
